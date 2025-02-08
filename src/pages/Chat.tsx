@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,41 +11,80 @@ interface Message {
   sender: "user" | "ai";
 }
 
+const QUESTIONS = [
+  {
+    index: 1,
+    question: "Hello! What goals would you like to achieve from this book?",
+    key: "goal",
+  },
+  {
+    index: 2,
+    question: "What is the timeline to achieve your goal?",
+    key: "timeline",
+  },
+  {
+    index: 3,
+    question: "Is there something that you like form the book?",
+    key: "somethingElse",
+  },
+] as const;
+
+type Question = (typeof QUESTIONS)[number];
+type Keys = (typeof QUESTIONS)[number]["key"];
+
 const Chat = () => {
   const navigate = useNavigate();
   const { bookId } = useParams();
+
+  const formRef = useRef<HTMLFormElement>();
+
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      content: "Hello! What goals would you like to achieve from this book?",
+      content: QUESTIONS[currentIndex].question,
       sender: "ai",
     },
   ]);
-  const [input, setInput] = useState("");
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const [answers, setAnswers] = useState<Record<Keys, string>>({
+    goal: "",
+    somethingElse: "",
+    timeline: "",
+  });
 
-    const newMessage = {
+  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const answer = String(formData.get("answer"));
+
+    const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
-      sender: "user" as const,
+      content: answer,
+      sender: "user",
     };
 
-    setMessages((prev) => [...prev, newMessage]);
-    setInput("");
+    setMessages((prev) => [...prev, userMessage]);
+    setAnswers((prev) => ({
+      ...prev,
+      [QUESTIONS[currentIndex].key]: answer,
+    }));
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = {
+    if (currentIndex < QUESTIONS.length - 1) {
+      const newQuestion = QUESTIONS[currentIndex + 1];
+      const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        content:
-          "Would you like to see your actionable items based on our discussion?",
-        sender: "ai" as const,
+        content: newQuestion.question,
+        sender: "ai",
       };
       setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
-  };
+      setCurrentIndex((prev) => prev + 1);
+    } else {
+      console.log("This is end");
+    }
+
+    formRef.current.reset();
+  }
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -67,27 +105,21 @@ const Chat = () => {
         </div>
 
         <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-sm">
-          <div className="max-w-2xl mx-auto flex gap-2">
+          <form
+            ref={formRef}
+            onSubmit={handleFormSubmit}
+            className="max-w-2xl mx-auto flex gap-2"
+          >
             <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
+              name="answer"
+              required
+              placeholder="Type your answer..."
               className="flex-1"
-              onKeyPress={(e) => e.key === "Enter" && handleSend()}
             />
-            <Button onClick={handleSend} className="group">
+            <Button className="group">
               <Send className="h-4 w-4 group-hover:animate-float" />
             </Button>
-            {messages.length > 1 && (
-              <Button
-                onClick={() => navigate("/actions")}
-                variant="secondary"
-                className="ml-2"
-              >
-                View Actions
-              </Button>
-            )}
-          </div>
+          </form>
         </div>
       </div>
     </div>

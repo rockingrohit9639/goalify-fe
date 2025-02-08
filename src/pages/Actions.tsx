@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { CheckCircle, ArrowRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -44,14 +43,15 @@ const Actions = () => {
             <Card
               key={action.id}
               className="p-6 group hover:shadow-lg transition-all duration-300 cursor-pointer animate-fade-in"
-              onClick={() => navigate(`/action/${action.id}`)}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <CheckCircle className="h-6 w-6 text-primary" />
-                  <div>
+                  <input type="checkbox" />
+                  <div onClick={() => navigate(`/action/${action.id}`)}>
                     <h3 className="font-semibold">{action.title}</h3>
-                    <p className="text-muted-foreground">{action.description}</p>
+                    <p className="text-muted-foreground">
+                      {action.description}
+                    </p>
                   </div>
                 </div>
                 <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
