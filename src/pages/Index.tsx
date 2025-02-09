@@ -21,7 +21,7 @@ const Index = () => {
           {BOOKS.map((book) => (
             <Card
               key={book.slug}
-              className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in"
+              className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg animate-fade-in cursor-pointer"
               onClick={() => navigate(`/onboarding/${book.slug}`)}
             >
               <div className="aspect-[3/4] relative">

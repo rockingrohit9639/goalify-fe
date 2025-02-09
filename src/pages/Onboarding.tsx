@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { QuestionKeys, QUESTIONS } from "@/data/questions";
 import { apiClient, RUN_ID, WORKFLOW_ID } from "@/lib/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 const Onboarding = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const formRef = useRef<HTMLFormElement>();
@@ -64,7 +66,13 @@ const Onboarding = () => {
 
       setCurrentIndex((prev) => prev + 1);
     } else {
-      await handleStartConversation();
+      setIsLoading(true);
+
+      setTimeout(() => {
+        navigate("/actions");
+        setIsLoading(false);
+      }, 2000);
+      // await handleStartConversation();
     }
 
     formRef.current.reset();
@@ -134,9 +142,6 @@ const Onboarding = () => {
               required
               placeholder="Type your answer..."
               className="flex-1"
-              type={
-                QUESTIONS[currentIndex].key === "timeline" ? "number" : "text"
-              }
             />
             <Button disabled={isLoading} className="group">
               <Send className="h-4 w-4 group-hover:animate-float" />
