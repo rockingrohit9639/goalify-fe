@@ -1,40 +1,11 @@
-
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-
-interface Book {
-  id: string;
-  title: string;
-  cover: string;
-}
+import { BOOKS } from "@/data/books";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [books, setBooks] = useState<Book[]>([
-    {
-      id: "1",
-      title: "Deep Work",
-      cover: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158",
-    },
-    {
-      id: "2",
-      title: "Atomic Habits",
-      cover: "https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b",
-    },
-    {
-      id: "3",
-      title: "Think and Grow Rich",
-      cover: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e",
-    },
-  ]);
-
-  const handleUpload = () => {
-    // Handle file upload logic here
-    console.log("Upload triggered");
-  };
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -47,11 +18,11 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          {books.map((book) => (
+          {BOOKS.map((book) => (
             <Card
-              key={book.id}
+              key={book.slug}
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg cursor-pointer animate-fade-in"
-              onClick={() => navigate(`/chat/${book.id}`)}
+              onClick={() => navigate(`/onboarding/${book.slug}`)}
             >
               <div className="aspect-[3/4] relative">
                 <img
@@ -68,10 +39,7 @@ const Index = () => {
         </div>
 
         <div className="text-center animate-fade-in">
-          <Button
-            onClick={handleUpload}
-            className="group bg-primary hover:bg-primary/90 text-primary-foreground"
-          >
+          <Button className="group bg-primary hover:bg-primary/90 text-primary-foreground">
             <Upload className="mr-2 h-4 w-4 group-hover:animate-float" />
             Upload New Book
           </Button>

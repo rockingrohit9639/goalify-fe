@@ -1,9 +1,11 @@
 import { useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { QuestionKeys, QUESTIONS } from "@/data/questions";
+import { apiClient, RUN_ID, WORKFLOW_ID } from "@/lib/client";
+import { toast } from "sonner";
 
 interface Message {
   id: string;
@@ -11,30 +13,8 @@ interface Message {
   sender: "user" | "ai";
 }
 
-const QUESTIONS = [
-  {
-    index: 1,
-    question: "Hello! What goals would you like to achieve from this book?",
-    key: "goal",
-  },
-  {
-    index: 2,
-    question: "What is the timeline to achieve your goal?",
-    key: "timeline",
-  },
-  {
-    index: 3,
-    question: "Is there something that you like form the book?",
-    key: "somethingElse",
-  },
-] as const;
-
-type Question = (typeof QUESTIONS)[number];
-type Keys = (typeof QUESTIONS)[number]["key"];
-
-const Chat = () => {
-  const navigate = useNavigate();
-  const { bookId } = useParams();
+const Onboarding = () => {
+  const [isLoading, setIsLoading] = useState(false);
 
   const formRef = useRef<HTMLFormElement>();
 
@@ -47,13 +27,13 @@ const Chat = () => {
     },
   ]);
 
-  const [answers, setAnswers] = useState<Record<Keys, string>>({
+  const [answers, setAnswers] = useState<Record<QuestionKeys, string>>({
     goal: "",
     somethingElse: "",
     timeline: "",
   });
 
-  function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleFormSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const answer = String(formData.get("answer"));
@@ -77,13 +57,51 @@ const Chat = () => {
         content: newQuestion.question,
         sender: "ai",
       };
-      setMessages((prev) => [...prev, aiResponse]);
+
+      setTimeout(() => {
+        setMessages((prev) => [...prev, aiResponse]);
+      }, 1000);
+
       setCurrentIndex((prev) => prev + 1);
     } else {
-      console.log("This is end");
+      await handleStartConversation();
     }
 
     formRef.current.reset();
+  }
+
+  async function handleStartConversation() {
+    setIsLoading(true);
+
+    const llm_content = `My goal is ${answers.goal} and I want to complete it in ${answers.timeline}. And from this book, I have something specific
+      and that is ${answers.somethingElse}`;
+
+    await apiClient
+      .put(
+        `/AgentRag/${WORKFLOW_ID}/${RUN_ID}`,
+        {
+          eventName: "message",
+          eventInput: {
+            content: llm_content,
+          },
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((response) => {
+        console.log(response);
+      })
+      .catch((error) => {
+        toast.success(
+          error instanceof Error ? error.message : "Something went wrong"
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }
 
   return (
@@ -111,12 +129,16 @@ const Chat = () => {
             className="max-w-2xl mx-auto flex gap-2"
           >
             <Input
+              disabled={isLoading}
               name="answer"
               required
               placeholder="Type your answer..."
               className="flex-1"
+              type={
+                QUESTIONS[currentIndex].key === "timeline" ? "number" : "text"
+              }
             />
-            <Button className="group">
+            <Button disabled={isLoading} className="group">
               <Send className="h-4 w-4 group-hover:animate-float" />
             </Button>
           </form>
@@ -126,4 +148,4 @@ const Chat = () => {
   );
 };
 
-export default Chat;
+export default Onboarding;
